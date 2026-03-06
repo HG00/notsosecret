@@ -41,7 +41,8 @@ This demo makes that visible in real time.
 ## Requirements
 
 - Linux host with a public IPv6 address
-- DNS `AAAA` record pointing your domain at that IPv6 address
+- DNS `AAAA` record pointing a domain at that IPv6 address
+- DNS `A` record pointing the same domain at your IPv4 address
 - `zeek`, `certbot`, `nginx` installed (handled by `install.sh`)
 - Python 3.11+ with `rich` (`pip install rich`, handled by `install.sh`)
 - `asciinema` (optional, for recording — also installed by `install.sh`)
