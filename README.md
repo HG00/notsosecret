@@ -28,21 +28,28 @@ This demo makes that visible in real time.
 
 1. Zeek captures all incoming traffic on the server's public interface
 2. The monitor displays a live feed of probes hitting ports 22, 80, and 443,
-   along with a rolling connections-per-second rate
-3. Before a certificate is requested, the rate on an IPv6-only host should
-   be near zero — mass internet scanners are overwhelmingly IPv4
+   with separate IPv4 and IPv6 rates shown side by side
+3. Before a certificate is requested, the IPv6 rate should be near zero —
+   mass internet scanners are overwhelmingly IPv4, and the host's IPv6 address
+   has never appeared anywhere public
 4. Press `R` to request a Let's Encrypt certificate for your domain
 5. The hostname is published to the CT logs within seconds of issuance
-6. Watch the probe rate climb as automated scanners discover and target the
-   host — typically within minutes, without any other announcement
+6. Watch both rates climb as automated scanners discover and target the host —
+   typically within minutes, without any other announcement
+
+The split IPv4/IPv6 display makes the CT-driven discovery clearly visible:
+IPv6 climbs from a clean zero baseline while IPv4 climbs from a low background
+noise floor.  Both protocols get targeted because CT log scanners resolve the
+domain and probe whatever addresses they find — A and AAAA alike.
 
 ---
 
 ## Requirements
 
-- Linux host with a public IPv6 address
-- DNS `AAAA` record pointing a domain at that IPv6 address
-- DNS `A` record pointing the same domain at your IPv4 address
+- Linux host with a public IP address (IPv4 and/or IPv6)
+- DNS `A` record (IPv4) and/or `AAAA` record (IPv6) pointing at your host —
+  dual-stack gives the best demo: maximum scanner coverage with a clean IPv6
+  baseline to show CT-driven discovery against
 - `zeek`, `certbot`, `nginx` installed (handled by `install.sh`)
 - Python 3.11+ with `rich` (`pip install rich`, handled by `install.sh`)
 - `asciinema` (optional, for recording — also installed by `install.sh`)
@@ -82,12 +89,20 @@ log_dir = .
 
 ### 2. Point DNS at your host
 
-Create an `AAAA` record for your domain pointing at the host's public IPv6
-address.  Verify propagation:
+Create DNS records pointing at your host's public address(es).  Dual-stack
+is recommended — both records together give maximum scanner coverage while
+keeping a clean IPv6 baseline to contrast against:
 
 ```bash
+# IPv4
+dig A www.your-domain.example
+
+# IPv6
 dig AAAA www.your-domain.example
 ```
+
+If you only have one address type, a single record is fine — the demo still
+works, you just won't see the IPv4/IPv6 split in the rate display.
 
 ### 3. Install dependencies
 

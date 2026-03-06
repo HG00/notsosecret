@@ -1,5 +1,6 @@
 [demo]
-# Fully-qualified domain name pointing at this host (AAAA record required for IPv6)
+# Fully-qualified domain name pointing at this host
+# Add an A record (IPv4) and/or AAAA record (IPv6) — dual-stack recommended for maximum scanner coverage
 domain = www.example.com
 
 # Email address for Let's Encrypt registration and expiry notices

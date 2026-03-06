@@ -32,8 +32,11 @@ gather_config() {
     read -rp "  Email for Let's Encrypt:        " EMAIL
     [[ -n "$EMAIL" ]] || die "Email cannot be empty."
 
-    # Auto-detect default interface (first non-loopback with an IPv6 global address)
+    # Auto-detect default interface — try IPv6 first, fall back to IPv4
     DEFAULT_IFACE=$(ip -6 addr show scope global | awk '/^[0-9]+:/ {gsub(":",""); print $2}' | head -1)
+    if [[ -z "$DEFAULT_IFACE" ]]; then
+        DEFAULT_IFACE=$(ip -4 addr show scope global | awk '/^[0-9]+:/ {gsub(":",""); print $2}' | head -1)
+    fi
     read -rp "  Network interface [${DEFAULT_IFACE:-eth0}]:  " IFACE
     IFACE="${IFACE:-${DEFAULT_IFACE:-eth0}}"
 
