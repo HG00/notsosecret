@@ -99,17 +99,19 @@ cp .env.example .env
 # Edit .env — set DOMAIN, EMAIL, and IFACE
 # IFACE must match the host's public interface name, e.g. eth0, ens5, enp0s3
 # Find yours: ip -4 addr show scope global
-docker compose up
+./run.sh
 ```
 
-Zeek logs are written to `./logs/` on the host.  Press `R` inside the TUI
-to request a Let's Encrypt certificate; nginx reloads automatically and
-begins serving HTTPS on port 443.
+`run.sh` fetches your public IP(s), prints the DNS A/AAAA records you need to
+create and the firewall ports to open, then waits for you to press Enter before
+building and starting the container.  Zeek logs are written to `./logs/` on
+the host.  Press `R` inside the TUI to request a Let's Encrypt certificate;
+nginx reloads automatically and begins serving HTTPS on port 443.
 
 ### Recording with asciinema
 
 ```bash
-asciinema rec ct-demo.cast --command "docker compose up"
+asciinema rec ct-demo.cast --command "./run.sh"
 ```
 
 ---

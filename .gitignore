@@ -3,7 +3,6 @@ demo.conf
 
 # Docker environment file — contains your domain and email
 .env
-run.sh
 
 # Certbot output — contains your email address in the logged command
 certbot.log
