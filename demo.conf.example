@@ -1,0 +1,9 @@
+[demo]
+# Fully-qualified domain name pointing at this host (AAAA record required for IPv6)
+domain = www.example.com
+
+# Email address for Let's Encrypt registration and expiry notices
+email = you@example.com
+
+# Directory where Zeek writes its logs (run: sudo zeek -i IFACE -C from this dir)
+log_dir = .
