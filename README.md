@@ -70,6 +70,50 @@ interface, then install all dependencies, configure nginx, and write
 
 ---
 
+## Docker
+
+### Prerequisites
+
+- Docker and Docker Compose installed
+- **Linux host with a public IP address** — see the note below
+
+> **Mac and Windows are not supported.**  Docker Desktop on Mac and Windows
+> runs containers inside a Linux VM with NAT.  `--network=host` exposes the
+> VM's network, not the Mac/Windows host's network, so nginx cannot bind to
+> your public IP and Zeek cannot see the host's traffic.  Use a Linux VM or
+> cloud instance.
+
+### How it works
+
+The container runs with `--network=host`, so it shares the host's network
+stack entirely — no port mapping required.  nginx binds directly to ports 80
+and 443 on the host.  Zeek captures packets at the NIC level using raw
+AF_PACKET sockets; it observes traffic to all ports (including 22) without
+binding any of them.  Port 22 remains in use by the host's SSH daemon and
+Zeek simply watches it passively.
+
+### Quickstart
+
+```bash
+cp .env.example .env
+# Edit .env — set DOMAIN, EMAIL, and IFACE
+# IFACE must match the host's public interface name, e.g. eth0, ens5, enp0s3
+# Find yours: ip -4 addr show scope global
+docker compose up
+```
+
+Zeek logs are written to `./logs/` on the host.  Press `R` inside the TUI
+to request a Let's Encrypt certificate; nginx reloads automatically and
+begins serving HTTPS on port 443.
+
+### Recording with asciinema
+
+```bash
+asciinema rec ct-demo.cast --command "docker compose up"
+```
+
+---
+
 ## Manual setup
 
 ### 1. Configure

@@ -144,6 +144,45 @@ cert_requested_at: datetime | None = None
 cert_status        = ""
 stop_flag          = threading.Event()
 
+public_ipv4: str = ""
+public_ipv6: str = ""
+
+# ---------------------------------------------------------------------------
+# IP discovery
+# ---------------------------------------------------------------------------
+
+def fetch_public_ips(domain: str) -> None:
+    global public_ipv4, public_ipv6
+    for flag, target in [("-4", "public_ipv4"), ("-6", "public_ipv6")]:
+        try:
+            r = subprocess.run(
+                ["curl", flag, "-s", "--max-time", "3", "https://icanhazip.com"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if r.returncode == 0:
+                ip = r.stdout.strip()
+                if ip:
+                    globals()[target] = ip
+        except Exception:
+            pass
+
+
+def print_dns_setup(domain: str) -> None:
+    """Print DNS and firewall instructions as static text before the Live TUI starts."""
+    if not public_ipv4 and not public_ipv6:
+        return
+    print()
+    print("  Set the following DNS records before requesting a certificate:")
+    print()
+    if public_ipv4:
+        print(f"    A     {domain}  →  {public_ipv4}")
+    if public_ipv6:
+        print(f"    AAAA  {domain}  →  {public_ipv6}")
+    print()
+    print("  Ensure your firewall / cloud security group allows inbound TCP:")
+    print("    22 (SSH)   80 (HTTP)   443 (HTTPS)")
+    print()
+
 # ---------------------------------------------------------------------------
 # Log processors
 # ---------------------------------------------------------------------------
@@ -247,7 +286,7 @@ def _install_https_nginx(domain: str, nginx_template: Path) -> None:
     with open(dest, "w") as f:
         f.write(config)
     subprocess.run(["nginx", "-t"], check=True, capture_output=True, timeout=10)
-    subprocess.run(["systemctl", "reload", "nginx"], check=True, timeout=10)
+    subprocess.run(["nginx", "-s", "reload"], check=True, timeout=10)
 
 
 def request_cert(domain: str, email: str, log_path: Path, nginx_template: Path) -> None:
@@ -470,8 +509,7 @@ def main() -> None:
     ssh_tailer  = ZeekTailer(log_dir / "ssh.log")
 
     if not conn_tailer.open():
-        print(f"Cannot open {log_dir / 'conn.log'} — is Zeek running?")
-        sys.exit(1)
+        print(f"Warning: {log_dir / 'conn.log'} not found yet — waiting for first connection…")
 
     http_tailer.open()
     ssh_tailer.open()
@@ -484,6 +522,11 @@ def main() -> None:
     kb = threading.Thread(target=keyboard_thread,
                           args=(args.domain, args.email, log_path, nginx_template), daemon=True)
     kb.start()
+
+    fetch_public_ips(args.domain)
+    print_dns_setup(args.domain)
+    if public_ipv4 or public_ipv6:
+        input("  Press Enter when DNS is configured (or to skip)… ")
 
     global monitor_started_at, peak_rate_v4, peak_rate_v6
     monitor_started_at = datetime.now()
